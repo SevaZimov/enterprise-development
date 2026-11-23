@@ -2,44 +2,19 @@ using CarWash.Domain;
 
 namespace CarWash.Tests;
 
-/// <summary>
-/// Provides deterministic, fictional data for car wash analytics tests.
-/// </summary>
-/// <remarks>
-/// Each collection contains ten entities. Orders reuse the clients, vehicles,
-/// and services from these collections. Tests sharing this fixture should not
-/// modify the entities or the clients' vehicle lists.
-/// </remarks>
+/// <summary>Данные для тестов автомойки.</summary>
 public class CarWashFixture
 {
-    /// <summary>
-    /// Gets the fixed local time used by time-dependent test scenarios.
-    /// </summary>
     public DateTime ReferenceTime { get; } = new(2026, 9, 14, 10, 0, 0);
 
-    /// <summary>
-    /// Gets the vehicles available in the test dataset.
-    /// </summary>
     public IReadOnlyList<Vehicle> Vehicles { get; }
 
-    /// <summary>
-    /// Gets the clients and their associated vehicles.
-    /// </summary>
     public IReadOnlyList<Client> Clients { get; }
 
-    /// <summary>
-    /// Gets the services, including services that have not been ordered.
-    /// </summary>
     public IReadOnlyList<Service> Services { get; }
 
-    /// <summary>
-    /// Gets the orders, deliberately arranged out of chronological order.
-    /// </summary>
     public IReadOnlyList<Order> Orders { get; }
 
-    /// <summary>
-    /// Creates ten vehicles, ten clients, ten services, and ten related orders.
-    /// </summary>
     public CarWashFixture()
     {
         Vehicles =
@@ -244,8 +219,6 @@ public class CarWashFixture
             }
         ];
 
-        // These fixed local timestamps use the same time convention as ReferenceTime.
-        // Bookings in the same box do not overlap; some meet at an exact boundary.
         Orders =
         [
             new()
