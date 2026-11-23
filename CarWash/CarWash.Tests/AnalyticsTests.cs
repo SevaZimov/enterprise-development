@@ -31,7 +31,7 @@ public class AnalyticsTests(CarWashFixture fixture) : IClassFixture<CarWashFixtu
             .Take(5)
             .ToArray();
 
-        Assert.Equal(expectedClients, actual.Select(item => item.Client).ToArray());
+        Assert.Equal(expectedClients, [.. actual.Select(item => item.Client)]);
         Assert.Equal(expectedVisitCounts, actual.Select(item => item.VisitCount).ToArray());
     }
 
@@ -83,7 +83,7 @@ public class AnalyticsTests(CarWashFixture fixture) : IClassFixture<CarWashFixtu
             .Take(5)
             .ToArray();
 
-        Assert.Equal(expectedServices, actual.Select(item => item.Service).ToArray());
+        Assert.Equal(expectedServices, [.. actual.Select(item => item.Service)]);
         Assert.Equal(expectedUsageCounts, actual.Select(item => item.UsageCount).ToArray());
     }
 
