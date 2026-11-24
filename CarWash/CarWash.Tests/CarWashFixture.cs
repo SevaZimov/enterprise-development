@@ -1,20 +1,42 @@
+using CarWash.Application;
+using CarWash.Application.Services;
 using CarWash.Domain;
 using CarWash.Infrastructure.InMemory;
 
 namespace CarWash.Tests;
 
-/// <summary>Данные для тестов автомойки.</summary>
-public class CarWashFixture
+/// <summary>Сервис аналитики с тестовым расписанием.</summary>
+public sealed class CarWashFixture : IDisposable
 {
-    private readonly CarWashSeed _seed = new();
+    private readonly CarWashGate _gate = new();
 
-    public DateTimeOffset ReferenceTime => _seed.ReferenceTime;
+    public DateTimeOffset ReferenceTime { get; }
 
-    public IReadOnlyList<Vehicle> Vehicles => _seed.Vehicles;
+    public AnalyticsService Analytics { get; }
 
-    public IReadOnlyList<Client> Clients => _seed.Clients;
+    public CarWashFixture()
+    {
+        var seed = new CarWashSeed();
+        ReferenceTime = seed.ReferenceTime;
+        Analytics = new(
+            new InMemoryRepository<Order>(seed.Orders),
+            new InMemoryRepository<Client>(seed.Clients),
+            new InMemoryRepository<Vehicle>(seed.Vehicles),
+            new InMemoryRepository<Service>(seed.Services),
+            new FixedTimeProvider(seed.ReferenceTime),
+            _gate);
+    }
 
-    public IReadOnlyList<Service> Services => _seed.Services;
+    public void Dispose()
+    {
+        _gate.Dispose();
+    }
 
-    public IReadOnlyList<Order> Orders => _seed.Orders;
+    private sealed class FixedTimeProvider(DateTimeOffset time) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow()
+        {
+            return time.ToUniversalTime();
+        }
+    }
 }

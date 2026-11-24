@@ -1,137 +1,62 @@
-using CarWash.Domain;
-
 namespace CarWash.Tests;
 
 /// <summary>Тесты запросов к данным автомойки.</summary>
 public class AnalyticsTests(CarWashFixture fixture) : IClassFixture<CarWashFixture>
 {
-    /// <summary>Каждый заказ считается одним визитом.</summary>
     [Fact]
-    public void Top5ClientsShouldReturnClientsOrderedByVisitsThenName()
+    public async Task TopClientsAreOrderedByVisitCountThenName()
     {
-        Client[] expectedClients =
-        [
-            fixture.Clients[0],
-            fixture.Clients[1],
-            fixture.Clients[2],
-            fixture.Clients[4],
-            fixture.Clients[5]
-        ];
-        int[] expectedVisitCounts = [3, 2, 2, 1, 1];
+        int[] expectedIds = [1, 2, 3, 5, 6];
+        int[] expectedCounts = [3, 2, 2, 1, 1];
 
-        var actual = fixture.Orders
-            .GroupBy(order => order.ClientId)
-            .Select(group => new
-            {
-                Client = fixture.Clients.Single(client => client.Id == group.Key),
-                VisitCount = group.Count()
-            })
-            .OrderByDescending(item => item.VisitCount)
-            .ThenBy(item => item.Client.FullName, StringComparer.Ordinal)
-            .Take(5)
-            .ToArray();
+        var actual = await fixture.Analytics.GetTopClientsAsync(TestContext.Current.CancellationToken);
 
-        Assert.Equal(expectedClients, [.. actual.Select(item => item.Client)]);
-        Assert.Equal(expectedVisitCounts, actual.Select(item => item.VisitCount).ToArray());
+        Assert.Equal(expectedIds, actual.Select(item => item.ClientId));
+        Assert.Equal(expectedCounts, actual.Select(item => item.VisitCount));
     }
 
     /// <summary>В момент окончания мойки машина уже свободна.</summary>
     [Fact]
-    public void VehiclesOnWashNowShouldReturnVehiclesBeingWashed()
+    public async Task VehiclesInWashUseCurrentTimeByDefault()
     {
-        var timeNow = fixture.ReferenceTime;
-        Vehicle[] expectedVehicles =
-        [
-            fixture.Vehicles[7],
-            fixture.Vehicles[4],
-            fixture.Vehicles[2],
-            fixture.Vehicles[3]
-        ];
+        int[] expectedIds = [8, 5, 3, 4];
 
-        var actual = fixture.Orders
-            .Where(order => order.ServiceStartTime <= timeNow
-                && order.ServiceStartTime.AddMinutes(GetService(order).DurationMinutes) > timeNow)
-            .Select(order => fixture.Vehicles.Single(vehicle => vehicle.Id == order.VehicleId))
-            .ToArray();
+        var actual = await fixture.Analytics.GetVehiclesInWashAsync(null, TestContext.Current.CancellationToken);
 
-        Assert.Equal(expectedVehicles, actual);
+        Assert.Equal(expectedIds, actual.Select(vehicle => vehicle.Id));
     }
 
-    /// <summary>При равном числе заказов услуги идут по названию.</summary>
     [Fact]
-    public void Top5ServicesShouldReturnServicesOrderedByUsageThenName()
+    public async Task TopServicesAreOrderedByUsageThenName()
     {
-        Service[] expectedServices =
-        [
-            fixture.Services[0],
-            fixture.Services[3],
-            fixture.Services[5],
-            fixture.Services[2],
-            fixture.Services[6]
-        ];
-        int[] expectedUsageCounts = [3, 2, 2, 1, 1];
+        int[] expectedIds = [1, 4, 6, 3, 7];
+        int[] expectedCounts = [3, 2, 2, 1, 1];
 
-        var actual = fixture.Orders
-            .GroupBy(order => order.ServiceId)
-            .Select(group => new
-            {
-                Service = fixture.Services.Single(service => service.Id == group.Key),
-                UsageCount = group.Count()
-            })
-            .OrderByDescending(item => item.UsageCount)
-            .ThenBy(item => item.Service.Name, StringComparer.Ordinal)
-            .Take(5)
-            .ToArray();
+        var actual = await fixture.Analytics.GetTopServicesAsync(TestContext.Current.CancellationToken);
 
-        Assert.Equal(expectedServices, [.. actual.Select(item => item.Service)]);
-        Assert.Equal(expectedUsageCounts, actual.Select(item => item.UsageCount).ToArray());
+        Assert.Equal(expectedIds, actual.Select(item => item.ServiceId));
+        Assert.Equal(expectedCounts, actual.Select(item => item.UsageCount));
     }
 
     /// <summary>Учитываются и будущие записи в бокс.</summary>
     [Fact]
-    public void TimeWhenBoxBecomesFreeShouldReturnLastScheduledEndTime()
+    public async Task BoxIsFreeAfterItsLastBooking()
     {
-        var boxNumber = 1;
         DateTimeOffset expectedTime = new(2026, 9, 14, 11, 30, 0, fixture.ReferenceTime.Offset);
 
-        var actual = fixture.Orders
-            .Where(order => order.BoxNumber == boxNumber)
-            .OrderByDescending(order => order.ServiceStartTime)
-            .Select(order => order.ServiceStartTime.AddMinutes(GetService(order).DurationMinutes))
-            .FirstOrDefault();
+        var actual = await fixture.Analytics.GetBoxAvailabilityAsync(1, TestContext.Current.CancellationToken);
 
-        Assert.Equal(expectedTime, actual);
+        Assert.Equal(1, actual.BoxNumber);
+        Assert.Equal(expectedTime, actual.FreeFrom);
     }
 
-    /// <summary>Услуга без заказов даёт нулевую выручку.</summary>
     [Fact]
-    public void TotalRevenueForEachServiceShouldIncludeServicesWithoutOrders()
+    public async Task RevenueIncludesServicesWithoutOrders()
     {
-        decimal[] expectedRevenues =
-        [
-            1800m,
-            800m,
-            1500m,
-            2400m,
-            0m,
-            800m,
-            700m,
-            0m,
-            0m,
-            0m
-        ];
+        decimal[] expected = [1800m, 800m, 1500m, 2400m, 0m, 800m, 700m, 0m, 0m, 0m];
 
-        var actual = fixture.Services
-            .Select(currentService => fixture.Orders
-                .Where(order => order.ServiceId == currentService.Id)
-                .Sum(_ => currentService.Price))
-            .ToArray();
+        var actual = await fixture.Analytics.GetRevenueAsync(TestContext.Current.CancellationToken);
 
-        Assert.Equal(expectedRevenues, actual);
-    }
-
-    private Service GetService(Order order)
-    {
-        return fixture.Services.Single(service => service.Id == order.ServiceId);
+        Assert.Equal(expected, actual.Select(item => item.Revenue));
     }
 }

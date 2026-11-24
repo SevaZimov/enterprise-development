@@ -67,7 +67,7 @@ dotnet run --project CarWash/CarWash.Api
 - `CarWash.Contracts` — входные данные, ответы и интерфейсы сервисов.
 - `CarWash.Application` — операции над сущностями и отчёты.
 - `CarWash.Api` — контроллеры и настройка приложения.
-- `CarWash.Tests` — тесты xUnit v3.
+- `CarWash.Tests` — пять тестов аналитики и три проверки HTTP API на xUnit v3.
 
 Из корня репозитория:
 
