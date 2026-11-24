@@ -11,6 +11,8 @@ public abstract class CrudService<TEntity, TDto, TEditDto>(IRepository<TEntity> 
     where TDto : class, IEntityDto
     where TEditDto : class
 {
+    protected IRepository<TEntity> Repository => repository;
+
     public async Task<IReadOnlyList<TDto>> ListAsync(CancellationToken cancellationToken)
     {
         var items = await repository.ListAsync(null, cancellationToken);

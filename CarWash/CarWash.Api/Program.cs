@@ -19,6 +19,9 @@ builder.Services.AddSingleton<IRepository<Service>>(new InMemoryRepository<Servi
 builder.Services.AddSingleton<IRepository<Order>>(new InMemoryRepository<Order>(seed.Orders));
 builder.Services.AddSingleton<CarWashGate>();
 builder.Services.AddScoped<ICrudService<ServiceDto, ServiceEditDto>, ServiceCatalog>();
+builder.Services.AddScoped<ICrudService<ClientDto, ClientEditDto>, ClientService>();
+builder.Services.AddScoped<ICrudService<VehicleDto, VehicleEditDto>, VehicleService>();
+builder.Services.AddScoped<ICrudService<OrderDto, OrderEditDto>, OrderService>();
 
 var app = builder.Build();
 
