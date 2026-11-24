@@ -1,6 +1,7 @@
 using CarWash.Api;
 using CarWash.Application;
 using CarWash.Application.Services;
+using CarWash.Contracts.Analytics;
 using CarWash.Contracts.Crud;
 using CarWash.Contracts.Dto;
 using CarWash.Domain;
@@ -18,10 +19,12 @@ builder.Services.AddSingleton<IRepository<Vehicle>>(new InMemoryRepository<Vehic
 builder.Services.AddSingleton<IRepository<Service>>(new InMemoryRepository<Service>(seed.Services));
 builder.Services.AddSingleton<IRepository<Order>>(new InMemoryRepository<Order>(seed.Orders));
 builder.Services.AddSingleton<CarWashGate>();
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<ICrudService<ServiceDto, ServiceEditDto>, ServiceCatalog>();
 builder.Services.AddScoped<ICrudService<ClientDto, ClientEditDto>, ClientService>();
 builder.Services.AddScoped<ICrudService<VehicleDto, VehicleEditDto>, VehicleService>();
 builder.Services.AddScoped<ICrudService<OrderDto, OrderEditDto>, OrderService>();
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
 var app = builder.Build();
 
