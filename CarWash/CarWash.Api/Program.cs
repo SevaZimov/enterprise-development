@@ -6,10 +6,12 @@ using CarWash.Contracts.Crud;
 using CarWash.Contracts.Dto;
 using CarWash.Domain;
 using CarWash.Infrastructure.InMemory;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 
@@ -29,5 +31,11 @@ builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 var app = builder.Build();
 
 app.UseExceptionHandler();
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference();
+}
+
 app.MapControllers();
 app.Run();

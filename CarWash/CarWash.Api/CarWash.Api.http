@@ -1,0 +1,26 @@
+@host = http://localhost:5081
+
+GET {{host}}/api/services
+Accept: application/json
+
+###
+
+GET {{host}}/api/analytics/vehicles-in-wash?at=2026-09-14T10%3A00%3A00%2B04%3A00
+Accept: application/json
+
+###
+
+GET {{host}}/api/analytics/boxes/1/availability
+Accept: application/json
+
+###
+
+POST {{host}}/api/services
+Content-Type: application/json
+
+{
+  "name": "Мойка стёкол",
+  "price": 450,
+  "durationMinutes": 15,
+  "category": 1
+}
