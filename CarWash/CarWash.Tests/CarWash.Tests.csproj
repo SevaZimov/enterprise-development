@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CarWash.Domain\CarWash.Domain.csproj" />
+    <ProjectReference Include="..\CarWash.Infrastructure.InMemory\CarWash.Infrastructure.InMemory.csproj" />
   </ItemGroup>
 
 </Project>

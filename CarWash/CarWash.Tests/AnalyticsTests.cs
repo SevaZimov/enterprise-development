@@ -20,10 +20,10 @@ public class AnalyticsTests(CarWashFixture fixture) : IClassFixture<CarWashFixtu
         int[] expectedVisitCounts = [3, 2, 2, 1, 1];
 
         var actual = fixture.Orders
-            .GroupBy(order => order.Client)
+            .GroupBy(order => order.ClientId)
             .Select(group => new
             {
-                Client = group.Key,
+                Client = fixture.Clients.Single(client => client.Id == group.Key),
                 VisitCount = group.Count()
             })
             .OrderByDescending(item => item.VisitCount)
@@ -50,8 +50,8 @@ public class AnalyticsTests(CarWashFixture fixture) : IClassFixture<CarWashFixtu
 
         var actual = fixture.Orders
             .Where(order => order.ServiceStartTime <= timeNow
-                && order.ServiceStartTime.AddMinutes(order.Service.DurationMinutes) > timeNow)
-            .Select(order => order.Vehicle)
+                && order.ServiceStartTime.AddMinutes(GetService(order).DurationMinutes) > timeNow)
+            .Select(order => fixture.Vehicles.Single(vehicle => vehicle.Id == order.VehicleId))
             .ToArray();
 
         Assert.Equal(expectedVehicles, actual);
@@ -72,10 +72,10 @@ public class AnalyticsTests(CarWashFixture fixture) : IClassFixture<CarWashFixtu
         int[] expectedUsageCounts = [3, 2, 2, 1, 1];
 
         var actual = fixture.Orders
-            .GroupBy(order => order.Service)
+            .GroupBy(order => order.ServiceId)
             .Select(group => new
             {
-                Service = group.Key,
+                Service = fixture.Services.Single(service => service.Id == group.Key),
                 UsageCount = group.Count()
             })
             .OrderByDescending(item => item.UsageCount)
@@ -92,12 +92,12 @@ public class AnalyticsTests(CarWashFixture fixture) : IClassFixture<CarWashFixtu
     public void TimeWhenBoxBecomesFreeShouldReturnLastScheduledEndTime()
     {
         var boxNumber = 1;
-        DateTime expectedTime = new(2026, 9, 14, 11, 30, 0);
+        DateTimeOffset expectedTime = new(2026, 9, 14, 11, 30, 0, fixture.ReferenceTime.Offset);
 
         var actual = fixture.Orders
             .Where(order => order.BoxNumber == boxNumber)
             .OrderByDescending(order => order.ServiceStartTime)
-            .Select(order => order.ServiceStartTime.AddMinutes(order.Service.DurationMinutes))
+            .Select(order => order.ServiceStartTime.AddMinutes(GetService(order).DurationMinutes))
             .FirstOrDefault();
 
         Assert.Equal(expectedTime, actual);
@@ -123,10 +123,15 @@ public class AnalyticsTests(CarWashFixture fixture) : IClassFixture<CarWashFixtu
 
         var actual = fixture.Services
             .Select(currentService => fixture.Orders
-                .Where(order => order.Service == currentService)
-                .Sum(order => order.Service.Price))
+                .Where(order => order.ServiceId == currentService.Id)
+                .Sum(_ => currentService.Price))
             .ToArray();
 
         Assert.Equal(expectedRevenues, actual);
+    }
+
+    private Service GetService(Order order)
+    {
+        return fixture.Services.Single(service => service.Id == order.ServiceId);
     }
 }

@@ -1,15 +1,17 @@
 ﻿namespace CarWash.Domain;
 
 /// <summary>Запись на мойку.</summary>
-public class Order
+public class Order : IEntity
 {
-    public required Client Client { get; init; }
+    public int Id { get; set; }
 
-    public required Vehicle Vehicle { get; init; }
+    public required int ClientId { get; init; }
 
-    public required Service Service { get; init; }
+    public required int VehicleId { get; init; }
 
-    public required DateTime ServiceStartTime { get; init; }
+    public required int ServiceId { get; init; }
+
+    public required DateTimeOffset ServiceStartTime { get; init; }
 
     public required int BoxNumber { get; init; }
 }
